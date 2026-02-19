@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Núcleo XR Pro - Proyecto Integrador</title>
+    <link rel="icon" href=",">
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            overflow: hidden; 
+            background: #000; 
+        }
+        
+        /* MENÚ DE ACCESIBILIDAD */
+        #access-menu {
+            position: absolute; 
+            top: 20px; 
+            right: 20px;
+            background: rgba(10, 25, 41, 0.95); 
+            padding: 20px;
+            border-radius: 4px; 
+            z-index: 9999; 
+            color: #e0e0e0;
+            border: 1px solid #2d3748;
+            font-size: 13px;
+            min-width: 220px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        #access-menu h3 { 
+            margin: 0 0 15px 0; 
+            font-size: 14px; 
+            color: #fff;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #4a5568;
+            padding-bottom: 10px;
+        }
+        .toggle-btn {
+            background: #3182ce; 
+            color: white; 
+            border: none;
+            padding: 10px 15px; 
+            cursor: pointer; 
+            border-radius: 3px;
+            font-size: 12px; 
+            margin: 6px 0; 
+            display: block; 
+            width: 100%;
+            transition: all 0.2s ease;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .toggle-btn:hover { 
+            background: #2c5282;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .toggle-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* WCAG 1.4.3 - ALTO CONTRASTE */
+        body.high-contrast #access-menu {
+            background: #000 !important; 
+            border: 2px solid #fff !important;
+            color: #fff !important;
+        }
+        body.high-contrast #access-menu h3 { 
+            color: #fff !important;
+            border-bottom-color: #fff !important;
+        }
+        body.high-contrast .toggle-btn {
+            background: #fff !important; 
+            color: #000 !important;
+            font-weight: 700 !important; 
+            border: 1px solid #fff !important;
+        }
+        body.high-contrast .toggle-btn:hover {
+            background: #e0e0e0 !important;
+        }
+        
+        /* PANEL DE INFORMACIÓN */
+        #info-panel {
+            position: absolute; 
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.98); 
+            padding: 30px;
+            border-radius: 4px; 
+            text-align: center; 
+            display: none;
+            z-index: 9998; 
+            color: #2d3748; 
+            max-width: 400px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); 
+            border-left: 4px solid #e53e3e;
+        }
+        #info-panel h2 { 
+            color: #c53030; 
+            margin: 0 0 20px 0; 
+            font-size: 20px;
+            font-weight: 600;
+        }
+        #info-panel p { 
+            margin: 10px 0; 
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        #info-panel .close-btn {
+            background: #38a169;
+            color: white; 
+            border: none;
+            padding: 10px 25px;
+            cursor: pointer; 
+            border-radius: 3px;
+            font-size: 12px;
+            margin-top: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        #info-panel .close-btn:hover {
+            background: #2f855a;
+        }
+        
+        /* CÍRCULO DE CARGA (GAZE) */
+        #gaze-loader {
+            position: absolute; 
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 60px; 
+            height: 60px;
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            border-top: 3px solid #48bb78; 
+            border-radius: 50%;
+            display: none; 
+            animation: spin 1s linear infinite; 
+            z-index: 9997;
+        }
+        @keyframes spin { 
+            0% { transform: translate(-50%, -50%) rotate(0deg); } 
+            100% { transform: translate(-50%, -50%) rotate(360deg); } 
+        }
+        
+        /* ESTADO */
+        #status {
+            position: absolute; 
+            bottom: 25px; 
+            left: 25px;
+            color: #e0e0e0; 
+            background: rgba(10, 25, 41, 0.9);
+            padding: 12px 18px; 
+            border-radius: 3px; 
+            font-size: 13px; 
+            z-index: 9996; 
+            border-left: 3px solid #48bb78;
+            font-weight: 500;
+        }
+        
+        /* SUBTÍTULO OVERLAY (Módulo B - WCAG 1.2.1) */
+        #spatial-subtitle {
+            position: absolute;
+            bottom: 100px;
+            right: 100px;
+            background: #ffffff;
+            color: #1a202c;
+            padding: 12px 20px;
+            border-radius: 3px;
+            font-weight: 600;
+            font-size: 13px;
+            display: none;
+            z-index: 9995;
+            border: 1px solid #cbd5e0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            max-width: 280px;
+            text-align: left;
+            letter-spacing: 0.2px;
+        }
+        body.high-contrast #spatial-subtitle {
+            background: #fff !important;
+            color: #000 !important;
+            border: 2px solid #fff !important;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MENÚ ACCESIBILIDAD (Módulo B) -->
+    <div id="access-menu">
+        <h3>Preferencias de Accesibilidad</h3>
+        <button class="toggle-btn" id="btn-contrast" onclick="toggleContrast()">
+            Activar Alto Contraste
+        </button>
+        <button class="toggle-btn" id="btn-subs" onclick="toggleSubtitles()">
+            Activar Subtítulos
+        </button>
+    </div>
+
+    <!-- PANEL INFORMACIÓN (Módulo A) -->
+    <div id="info-panel">
+        <h2>Zona Crítica Detectada</h2>
+        <p><strong>Acumulación de residuos electrónicos identificada</strong></p>
+        <p>Nivel de impacto ambiental: ALTO</p>
+        <p>Acción requerida: Protocolo de reciclaje inmediato</p>
+        <button class="close-btn" onclick="document.getElementById('info-panel').style.display='none'">
+            Confirmar
+        </button>
+    </div>
+
+    <!-- INDICADORES -->
+    <div id="gaze-loader"></div>
+    <div id="status">Mantenga la vista en el objeto rojo durante 10 segundos</div>
+    
+    <!-- SUBTÍTULO OVERLAY (Visible al activar accesibilidad) -->
+    <div id="spatial-subtitle">Fuente de audio: Maquinaria de procesamiento</div>
+
+    <!-- ESCENA 3D -->
+    <a-scene raycaster="objects: .clickable; far: 100" 
+             renderer="antialias: true; colorManagement: true; physicallyCorrectLights: true">
+        
+        <!-- ILUMINACIÓN -->
+        <a-light id="ambient-light" type="ambient" intensity="0.6" color="#BBBBBB"></a-light>
+        <a-light id="spot-light" type="spot" intensity="0" color="#FF3333" 
+                 position="0 5 0" rotation="-90 0 0" angle="40" penumbra="0.2"></a-light>
+        <a-light type="directional" intensity="0.2" color="#FFF" position="2 3 1"></a-light>
+
+        <!-- ENTORNO -->
+        <a-sky color="#0f0f23"></a-sky>
+        <a-plane position="0 0 0" rotation="-90 0 0" width="80" height="80" 
+                 color="#1a1a2e" material="metalness:0.1; roughness:0.8"></a-plane>
+
+        <!-- ZONA DE INTERÉS (Objetivo del Raycasting - Módulo A) -->
+        <a-box id="target-zone" position="0 1.6 -4" class="clickable"
+               width="2" height="3" depth="2"
+               material="color: #8B0000; metalness: 0.4; roughness: 0.3">
+            <a-text value="OBJETIVO" position="0 2 1.02" align="center" 
+                    color="#fff" width="2.5"></a-text>
+        </a-box>
+
+        <!-- ELEMENTOS DECORATIVOS -->
+        <a-box position="-3 0.5 -3" width="1.5" height="1" depth="1.5" 
+               material="color: #4CC3D9; metalness:0.2"></a-box>
+        
+        <!-- FUENTE SONORA VISUAL (Módulo B) -->
+        <a-entity id="audio-source" position="3 1.5 -3">
+            <!-- Esfera que representa la fuente sonora -->
+            <a-sphere radius="0.5" material="color: #FF6B35; metalness:0.2; roughness:0.8"></a-sphere>
+            <a-text value="AUDIO" position="0 -0.9 0" align="center" color="#FFA500" width="1.5"></a-text>
+        </a-entity>
+
+        <!-- CÁMARA + CURSOR -->
+        <a-entity camera position="0 1.6 0" look-controls="reverseMouseDrag: true">
+            <a-cursor color="#ffffff" fuse="true" timeout="1000" scale="0.3 0.3 0.3"></a-cursor>
+        </a-entity>
+
+    </a-scene>
+
+    <script>
+        // ===== VARIABLES GLOBALES =====
+        let highContrastActive = false;
+        let subtitlesActive = false;
+        let gazeStartTime = 0;
+        let isGazing = false;
+        let narrativeTriggered = false;
+
+        // ===== COMPONENTE: BILLBOARD =====
+        AFRAME.registerComponent('billboard', {
+            tick: function() {
+                const camera = this.el.sceneEl.camera;
+                if (camera) {
+                    this.el.object3D.quaternion.copy(camera.quaternion);
+                }
+            }
+        });
+
+        // ===== MÓDULO B: ACCESIBILIDAD =====
+        
+        window.toggleContrast = function() {
+            highContrastActive = !highContrastActive;
+            const btn = document.getElementById('btn-contrast');
+            
+            if (highContrastActive) {
+                document.body.classList.add('high-contrast');
+                btn.textContent = 'Desactivar Alto Contraste';
+                console.log('[ACCESIBILIDAD] Modo alto contraste activado - WCAG 1.4.3');
+            } else {
+                document.body.classList.remove('high-contrast');
+                btn.textContent = 'Activar Alto Contraste';
+                console.log('[ACCESIBILIDAD] Modo alto contraste desactivado');
+            }
+        };
+
+        window.toggleSubtitles = function() {
+            subtitlesActive = !subtitlesActive;
+            
+            const subtitleOverlay = document.getElementById('spatial-subtitle');
+            const btn = document.getElementById('btn-subs');
+            
+            if (subtitlesActive) {
+                subtitleOverlay.style.display = 'block';
+                btn.textContent = 'Desactivar Subtítulos';
+                console.log('[ACCESIBILIDAD] Subtítulos espaciales activados - WCAG 1.2.1');
+            } else {
+                subtitleOverlay.style.display = 'none';
+                btn.textContent = 'Activar Subtítulos';
+                console.log('[ACCESIBILIDAD] Subtítulos espaciales desactivados');
+            }
+        };
+
+        // ===== MÓDULO A: RAYCASTING E INTERACCIÓN =====
+        
+        document.querySelector('a-scene').addEventListener('loaded', function() {
+            console.log('[SISTEMA] Escena XR cargada - Inicializando módulos');
+            initGazeSystem();
+        });
+
+        function initGazeSystem() {
+            const camera = document.querySelector('[camera]');
+            const target = document.getElementById('target-zone');
+            const ambient = document.getElementById('ambient-light');
+            const spot = document.getElementById('spot-light');
+            const panel = document.getElementById('info-panel');
+            const loader = document.getElementById('gaze-loader');
+            const status = document.getElementById('status');
+
+            const raycaster = new THREE.Raycaster();
+            const center = new THREE.Vector2(0, 0);
+
+            function animate() {
+                requestAnimationFrame(animate);
+                if (!camera || !target || narrativeTriggered) return;
+
+                raycaster.setFromCamera(center, camera.getObject3D('camera'));
+                const mesh = target.getObject3D('mesh');
+                const hits = raycaster.intersectObject(mesh, true);
+
+                if (hits.length > 0) {
+                    if (!isGazing) {
+                        isGazing = true;
+                        gazeStartTime = Date.now();
+                        loader.style.display = 'block';
+                        console.log('[INTERACCIÓN] Detección de mirada iniciada - Temporizador activo');
+                    }
+                    
+                    const elapsed = Date.now() - gazeStartTime;
+                    const remaining = Math.max(0, 10 - Math.floor(elapsed / 1000));
+                    status.innerHTML = `Manteniendo vista... ${remaining}s restantes`;
+
+                    if (elapsed >= 10000) {
+                        activateNarrative(ambient, spot, panel, loader, status);
+                    }
+                } else {
+                    if (isGazing && !narrativeTriggered) {
+                        isGazing = false;
+                        loader.style.display = 'none';
+                        status.innerHTML = 'Mantenga la vista en el objeto rojo durante 10 segundos';
+                    }
+                }
+            }
+            animate();
+        }
+
+        function activateNarrative(ambient, spot, panel, loader, status) {
+            narrativeTriggered = true;
+            isGazing = false;
+            loader.style.display = 'none';
+            status.innerHTML = 'Zona crítica identificada exitosamente';
+            console.log('[NARRATIVA] Secuencia activada - Módulo A completado');
+
+            // Transición suave de iluminación
+            const duration = 2000;
+            const start = Date.now();
+            const initialAmbient = 0.6;
+
+            function fadeLights() {
+                const progress = Math.min((Date.now() - start) / duration, 1);
+                ambient.setAttribute('intensity', initialAmbient * (1 - progress));
+                spot.setAttribute('intensity', 2 * progress);
+                
+                if (progress < 1) requestAnimationFrame(fadeLights);
+            }
+            fadeLights();
+
+            setTimeout(() => { panel.style.display = 'block'; }, 600);
+        }
+
+        console.log('[SISTEMA] Núcleo XR Pro inicializado - Versión 1.0');
+    </script>
+</body>
+</html>
