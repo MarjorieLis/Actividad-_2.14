@@ -41,8 +41,8 @@ Este proyecto demuestra la implementación de un sistema de realidad virtual acc
 
 1. Clonar el repositorio:
 ```bash
-git clone https://github.com/TU_USUARIO/nucleo-xr-pro.git
-cd nucleo-xr-pro
+git clone https://github.com/MarjorieLis/Actividad-_2.14.git
+cd Actividad-_2.14
 ```
 
 2. Abrir con servidor local:
